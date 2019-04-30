@@ -1,0 +1,11 @@
+/build
+/debian/debhelper-build-stamp
+/debian/.debhelper/
+/debian/files
+/debian/*.debhelper.log
+/debian/*.substvars
+/debian/libmi-programoptions-dev/
+/debian/libmi-programoptions0-dbg/
+/debian/libmi-programoptions0/
+/debian/tmp/
+/obj-x86_64-linux-gnu/

@@ -1,0 +1,3 @@
+usr/include/mi_programoptions*.h
+usr/lib/*/libmi-programoptions*.so
+usr/lib/*/cmake

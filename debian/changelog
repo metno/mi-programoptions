@@ -1,0 +1,5 @@
+mi-programoptions (0.1.0-1) unstable; urgency=low
+
+  * debian packaging
+
+ -- Alexander Bürger <alexander.buerger@met.no>  Wed, 24 Apr 2019 08:00:08 +0200

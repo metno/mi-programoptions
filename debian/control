@@ -1,0 +1,38 @@
+Source: mi-programoptions
+Priority: optional
+Maintainer: MET Norway <diana@met.no>
+Build-Depends:  debhelper (>= 9),
+ cmake,
+ libmi-cpptest-dev
+Standards-Version: 3.9.6
+Section: libs
+
+Package: libmi-programoptions-dev
+Section: libdevel
+Architecture: any
+Depends: libmi-programoptions0 (= ${binary:Version}),
+ ${shlibs:Depends},
+ ${misc:Depends}
+Description: MET Norway c++ program options library
+ A small program options library.
+ .
+ This package contains the development files.
+
+Package: libmi-programoptions0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: MET Norway c++ program options library
+ A small program options library.
+ .
+ This package contains the shared library.
+
+Package: libmi-programoptions0-dbg
+Section: debug
+Priority: extra
+Architecture: any
+Depends: libmi-programoptions0 (= ${binary:Version})
+Description: MET Norway c++ program options library
+ A small program options library.
+ .
+ This package contains the shared library debug symbols.
