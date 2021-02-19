@@ -171,13 +171,14 @@ value_set parse_config_file(std::istream& infile, option_set& options)
   return values;
 }
 
-value_set parse_command_line(int argc, char* argv[], option_set& options, std::vector<std::string>& positional)
+value_set parse_command_line(const std::vector<std::string>& argv, option_set& options, std::vector<std::string>& positional)
 {
   value_set values;
   static const std::regex re_option("(-{1,2})(" OPTION_CHARS ")(=(.*))?");
   enum { GO_ALL, GO_DASH, GO_KEY, GO_EQ_VALUE, GO_VALUE };
   bool end_of_options_marker = false;
-  for (int a = 1; a < argc; ++a) {
+  const int argc = argv.size();
+  for (int a = 0; a < argc; ++a) {
     const std::string arg(argv[a]);
     if (arg == "--") {
       end_of_options_marker = true;
@@ -216,6 +217,11 @@ value_set parse_command_line(int argc, char* argv[], option_set& options, std::v
     }
   }
   return values;
+}
+
+value_set parse_command_line(int argc, char* argv[], option_set& options, std::vector<std::string>& positional)
+{
+  return parse_command_line(std::vector<std::string>(argv + 1, argv + argc), options, positional);
 }
 
 // ========================================================================
