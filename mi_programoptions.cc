@@ -29,11 +29,63 @@
 
 #include "mi_programoptions.h"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
+namespace {
+const std::string EMPTY;
+}
+
 namespace miutil {
 namespace program_options {
+
+option::option(const std::string& key, const std::string& help)
+    : help_(help)
+    , narg_(1)
+    , has_default_(false)
+    , has_implicit_(false)
+{
+  add_key(key);
+}
+
+option::~option() {}
+
+option& option::add_key(const std::string& k)
+{
+  if (!k.empty())
+    keys_.push_back(k);
+  return *this;
+}
+
+const std::string& option::key() const
+{
+  return keys_.empty() ? EMPTY : keys_.front();
+}
+
+option& option::set_shortkey(const std::string& sk)
+{
+  shortkeys_.clear();
+  return add_shortkey(sk);
+}
+
+option& option::add_shortkey(const std::string& sk)
+{
+  if (!sk.empty())
+    shortkeys_.push_back(sk);
+  return *this;
+}
+
+const std::string& option::shortkey() const
+{
+  return shortkeys_.empty() ? EMPTY : shortkeys_.front();
+}
+
+bool option::match(const std::string& key, bool use_shortkeys) const
+{
+  const std::vector<std::string>& k = use_shortkeys ? shortkeys_ : keys_;
+  return std::find(k.begin(), k.end(), key) != k.end();
+}
 
 bool value_set::is_set(option_cx opt) const
 {
@@ -229,8 +281,7 @@ value_set parse_command_line(int argc, char* argv[], option_set& options, std::v
 option_cx option_set::find_option(const std::string& key, bool use_shortkey)
 {
   for (option_cx opt : options_) {
-    const std::string& k = use_shortkey ? opt->shortkey() : opt->key();
-    if (!k.empty() && k == key)
+    if (opt->match(key, use_shortkey))
       return opt;
   }
   throw option_error("no such option '" + key + "'");
@@ -238,13 +289,19 @@ option_cx option_set::find_option(const std::string& key, bool use_shortkey)
 
 static void show_key(std::ostream& out, option_cx opt)
 {
-  const bool has_key = !opt->key().empty(), has_shortkey = !opt->shortkey().empty();
-  if (has_key)
-    out << "--" << opt->key();
-  if (has_shortkey) {
-    if (has_key)
-      out << " / ";
-    out << "-" << opt->shortkey();
+  bool first = true;
+  const std::string sep = " / ";
+  for (const auto& k : opt->keys()) {
+    if (!first)
+      out << sep;
+    out << "--" << k;
+    first = false;
+  }
+  for (const auto& sk : opt->shortkeys()) {
+    if (!first)
+      out << sep;
+    out << "-" << sk;
+    first = false;
   }
 }
 

@@ -56,20 +56,21 @@ typedef std::vector<std::string> string_v;
 class option
 {
 public:
-  option(const std::string& key, const std::string& help)
-      : key_(key)
-      , help_(help)
-      , narg_(1)
-      , has_default_(false)
-      , has_implicit_(false)
-  {
-  }
+  option(const std::string& key, const std::string& help);
+  ~option();
 
-  const std::string& key() const { return key_; }
+  option& add_key(const std::string& sk);
+  const std::string& key() const;
+  const std::vector<std::string>& keys() const { return keys_; }
+
   const std::string& help() const { return help_; }
 
-  option& set_shortkey(const std::string& sk) { shortkey_ = sk; return *this; }
-  const std::string& shortkey() const { return shortkey_; }
+  option& set_shortkey(const std::string& sk);
+  option& add_shortkey(const std::string& sk);
+  const std::string& shortkey() const;
+  const std::vector<std::string>& shortkeys() const { return shortkeys_; }
+
+  bool match(const std::string& key, bool use_shortkeys) const;
 
   option& set_default_value(const std::string& d)
   {
@@ -100,8 +101,8 @@ public:
   size_t narg() const { return narg_; }
 
 private:
-  std::string key_;
-  std::string shortkey_;
+  std::vector<std::string> keys_;
+  std::vector<std::string> shortkeys_;
   std::string help_;
   size_t narg_;
   std::string default_;

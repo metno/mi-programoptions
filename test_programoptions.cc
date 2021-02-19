@@ -164,3 +164,28 @@ MI_CPPTEST_TEST_CASE(progopt_end_of_options)
   MI_CPPTEST_CHECK_EQ(1, values.values(&o1).size());
   MI_CPPTEST_CHECK_EQ(2, positional.size());
 }
+
+MI_CPPTEST_TEST_CASE(progopt_multiple_keys)
+{
+  const option o1 = option("one.setting", "this is a setting").add_key("one.choice");
+
+  option_set options;
+  options.add(o1);
+
+  std::istringstream configfile1("[one]\nchoice=hei\n");
+  const value_set values1 = parse_config_file(configfile1, options);
+  MI_CPPTEST_CHECK(values1.is_set(&o1));
+}
+
+MI_CPPTEST_TEST_CASE(progopt_multiple_shortkeys)
+{
+  const option o2 = option("one.option", "this is an option").add_shortkey("option");
+
+  option_set options;
+  options.add(o2);
+
+  std::vector<std::string> cmdline {"test.exe", "-option=hi"};
+  string_v positional;
+  const value_set values2 = parse_command_line(cmdline, options, positional);
+  MI_CPPTEST_CHECK_EQ("hi", values2.value(&o2));
+}
