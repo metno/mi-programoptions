@@ -187,8 +187,13 @@ value_set parse_command_line(int argc, char* argv[], option_set& options, std::v
     if (!end_of_options_marker && std::regex_match(arg, match, re_option)) {
       option_cx opt = options.find_option(match[GO_KEY], match[GO_DASH].length() == 1);
       if (match[GO_VALUE].matched) {
-        if (opt->narg() == 0)
+        if (opt->narg() == 0) {
           throw option_error("arg for no-arg option '" + opt->key() + "'");
+        } else if (!opt->is_composing() && opt->narg() != 1) {
+          std::ostringstream msg;
+          msg << "args for option '" + opt->key() + "', which expects exactly " << opt->narg() << " values, cannot be passed with '='";
+          throw option_error(msg.str());
+        }
         values.put(opt, match[GO_VALUE].str());
       } else if (opt->has_implicit_value()) {
         values.put_implicit(opt);
