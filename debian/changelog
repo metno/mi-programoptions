@@ -1,3 +1,9 @@
+mi-programoptions (1.0.0-1) unstable; urgency=low
+
+  * new upstream version
+
+ -- Alexander Bürger <alexander.buerger@met.no>  Tue, 09 Mar 2021 08:00:08 +0100
+
 mi-programoptions (0.1.0-1) unstable; urgency=low
 
   * debian packaging
