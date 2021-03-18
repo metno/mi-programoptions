@@ -1,3 +1,9 @@
+mi-programoptions (1.0.0-5) unstable; urgency=low
+
+  * allow correct lib packages soversion
+
+ -- Alexander Bürger <alexander.buerger@met.no>  Wed, 18 Mar 2021 08:00:08 +0100
+
 mi-programoptions (1.0.0-4) unstable; urgency=low
 
   * check all lib packages vs soversion

@@ -19,8 +19,8 @@ version-check:
 	head -n1 debian/changelog | grep -q "$${V_MAJOR}\\.$${V_MINOR}\\.$${V_PATCH}-" || \
 	{ echo "version mismatch ${V_HEADER_FILE} vs debian/changelog" ; false ; } ; \
 	PKG=libmi-programoptions ; \
-	grep "$${PKG}[0-9]\\+" debian/control | grep -v "$${PKG}$${V_MAJOR}\\( \\|-\\|$$\\)" && \
-	{ echo "so version mismatch ${V_HEADER_FILE} vs debian/control" ; false ; }
+	if grep "$${PKG}[0-9]\\+" debian/control | grep -v "$${PKG}$${V_MAJOR}\\( \\|-\\|$$\\)" ; then \
+	echo "so version mismatch ${V_HEADER_FILE} vs debian/control" ; false ; else echo "so version ok" ; fi
 
 .PHONY: override_dh_strip
 override_dh_strip:
