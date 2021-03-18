@@ -1,3 +1,9 @@
+mi-programoptions (1.0.0-2) unstable; urgency=low
+
+  * check lib package vs soversion
+
+ -- Alexander Bürger <alexander.buerger@met.no>  Wed, 18 Mar 2021 08:00:08 +0100
+
 mi-programoptions (1.0.0-1) unstable; urgency=low
 
   * new upstream version
