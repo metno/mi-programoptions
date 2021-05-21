@@ -68,7 +68,7 @@ MI_CPPTEST_TEST_CASE(progopt_values_add)
   MI_CPPTEST_CHECK_EQ("hei", values.value(&o1));
   MI_CPPTEST_CHECK_EQ("hi", values.value(&o2));
   MI_CPPTEST_CHECK_EQ(&o2, values.find("one.option", false));
-  MI_CPPTEST_CHECK_EQ(nullptr, values.find("no.way", false));
+  MI_CPPTEST_CHECK_EQ(values.find("no.way", false), nullptr);
 }
 
 MI_CPPTEST_TEST_CASE(progopt_help)
