@@ -50,7 +50,10 @@ ELSE()
 ENDIF()
 
 ADD_LIBRARY(mi-programoptions ${MI_PROGRAMOPTIONS_LIBRARY_TYPE}
-  mi_programoptions.cc
+  mi_po_option.cc
+  mi_po_option_set.cc
+  mi_po_parse.cc
+  mi_po_value_set.cc
   ${MI_PROGRAMOPTIONS_HEADERS}
 )
 

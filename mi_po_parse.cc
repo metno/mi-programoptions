@@ -1,7 +1,7 @@
 /*
   mi-programoptions
 
-  Copyright (C) 2019 met.no
+  Copyright (C) 2019-2021 met.no
 
   Contact information:
   Norwegian Meteorological Institute
@@ -29,9 +29,7 @@
 
 #include "mi_programoptions.h"
 
-#include <algorithm>
 #include <fstream>
-#include <sstream>
 
 namespace {
 const std::string EMPTY;
@@ -39,134 +37,6 @@ const std::string EMPTY;
 
 namespace miutil {
 namespace program_options {
-
-option::option(const std::string& key, const std::string& help)
-    : help_(help)
-    , narg_(1)
-    , has_default_(false)
-    , has_implicit_(false)
-{
-  add_key(key);
-}
-
-option::~option() {}
-
-option& option::add_key(const std::string& k)
-{
-  if (!k.empty())
-    keys_.push_back(k);
-  return *this;
-}
-
-const std::string& option::key() const
-{
-  return keys_.empty() ? EMPTY : keys_.front();
-}
-
-option& option::set_shortkey(const std::string& sk)
-{
-  shortkeys_.clear();
-  return add_shortkey(sk);
-}
-
-option& option::add_shortkey(const std::string& sk)
-{
-  if (!sk.empty())
-    shortkeys_.push_back(sk);
-  return *this;
-}
-
-const std::string& option::shortkey() const
-{
-  return shortkeys_.empty() ? EMPTY : shortkeys_.front();
-}
-
-bool option::match(const std::string& key, bool use_shortkeys) const
-{
-  const std::vector<std::string>& k = use_shortkeys ? shortkeys_ : keys_;
-  return std::find(k.begin(), k.end(), key) != k.end();
-}
-
-bool value_set::is_set(option_cx opt) const
-{
-  return opt && (values_.find(opt) != values_.end());
-}
-
-void value_set::put_implicit(option_cx opt)
-{
-  if (!opt)
-    throw option_error("option is null");
-  if (!opt->has_implicit_value())
-    throw option_error("option '" + opt->key() + "' does not have an implicit value");
-  if (opt->narg() != 1)
-    throw option_error("option '" + opt->key() + "' expects != 1 values, cannot set to implicit value");
-  put(opt, opt->implicit_value());
-}
-
-void value_set::put(option_cx opt, const string_v& values)
-{
-  if (!opt)
-    throw option_error("option is null");
-  if (opt->is_composing()) {
-    if (values.size() != 1)
-      throw option_error("option '" + opt->key() + "' is composing, cannot #values != 1");
-  } else {
-    if (is_set(opt))
-      throw option_error("option '" + opt->key() + "' already set and not composing");
-  }
-
-  string_v& v = values_[opt];
-  v.insert(v.end(), values.begin(), values.end());
-}
-
-const string_v* value_set::get(option_cx opt) const
-{
-  if (!opt)
-    throw option_error("option is null");
-  values_t::const_iterator it = values_.find(opt);
-  if (it != values_.end())
-    return &it->second;
-  return nullptr;
-}
-
-const string_v& value_set::values(option_cx opt) const
-{
-  if (const string_v* values = get(opt))
-    return *values;
-
-  throw option_error("option '" + opt->key() + "' not set and without default");
-}
-
-const std::string& value_set::value(option_cx opt, size_t index) const
-{
-  if (const string_v* values = get(opt))
-    return values->at(index);
-
-  if (!opt)
-    throw option_error("option is null");
-  if (index == 0 && opt->has_default_value())
-    return opt->default_value();
-
-  throw option_error("option '" + opt->key() + "' not set and without default");
-}
-
-option_cx value_set::find(const std::string& key, bool use_shortkey) const
-{
-  for (const auto& o : values_) {
-    const std::string& k = use_shortkey ? o.first->shortkey() : o.first->key();
-    if (!k.empty() && k == key)
-      return o.first;
-  }
-  return nullptr;
-}
-
-void value_set::add(const value_set& other)
-{
-  for (const auto& o : other.values_) {
-    if (!values_.insert(o).second)
-      throw option_error("option '" + o.first->key() + "' already set");
-  }
-}
 
 value_set parse_config_file(const std::string& filename, option_set& options)
 {
@@ -274,58 +144,6 @@ value_set parse_command_line(const std::vector<std::string>& argv, option_set& o
 value_set parse_command_line(int argc, char* argv[], option_set& options, std::vector<std::string>& positional)
 {
   return parse_command_line(std::vector<std::string>(argv + 1, argv + argc), options, positional);
-}
-
-// ========================================================================
-
-option_cx option_set::find_option(const std::string& key, bool use_shortkey)
-{
-  for (option_cx opt : options_) {
-    if (opt->match(key, use_shortkey))
-      return opt;
-  }
-  throw option_error("no such option '" + key + "'");
-}
-
-static void show_key(std::ostream& out, option_cx opt)
-{
-  bool first = true;
-  const std::string sep = " / ";
-  for (const auto& k : opt->keys()) {
-    if (!first)
-      out << sep;
-    out << "--" << k;
-    first = false;
-  }
-  for (const auto& sk : opt->shortkeys()) {
-    if (!first)
-      out << sep;
-    out << "-" << sk;
-    first = false;
-  }
-}
-
-void option_set::dump(std::ostream& out, const value_set& values) const
-{
-  for (option_cx opt : options_) {
-    if (values.is_set(opt)) {
-      show_key(out, opt);
-      out << std::endl;
-      for (const std::string& v : *values.get(opt))
-        out << "  => '" << v << "'" << std::endl;
-    }
-  }
-}
-
-void option_set::help(std::ostream& out) const
-{
-  for (option_cx opt : options_) {
-    show_key(out, opt);
-    out << ": " << opt->help();
-    if (opt->has_default_value())
-      out << " (default: " << opt->default_value() << ")";
-    out << std::endl;
-  }
 }
 
 positional_args_consumer& positional_args_consumer::operator>>(const option& opt)

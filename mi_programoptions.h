@@ -1,7 +1,7 @@
 /*
   mi-programoptions
 
-  Copyright (C) 2019 met.no
+  Copyright (C) 2019-2021 met.no
 
   Contact information:
   Norwegian Meteorological Institute
@@ -57,58 +57,45 @@ class option
 {
 public:
   option(const std::string& key, const std::string& help);
+  option(const option& o);
+  option(option&& o);
   ~option();
+
+  option& operator=(const option& o);
 
   option& add_key(const std::string& sk);
   const std::string& key() const;
-  const std::vector<std::string>& keys() const { return keys_; }
+  const std::vector<std::string>& keys() const;
 
-  const std::string& help() const { return help_; }
+  const std::string& help() const;
 
   option& set_shortkey(const std::string& sk);
   option& add_shortkey(const std::string& sk);
   const std::string& shortkey() const;
-  const std::vector<std::string>& shortkeys() const { return shortkeys_; }
+  const std::vector<std::string>& shortkeys() const;
 
   bool match(const std::string& key, bool use_shortkeys) const;
 
-  option& set_default_value(const std::string& d)
-  {
-    has_default_ = true;
-    default_ = d;
-    return *this;
-  }
-  bool has_default_value() const { return has_default_; }
-  const std::string& default_value() const { return default_; }
+  option& set_default_value(const std::string& d);
+  bool has_default_value() const;
+  const std::string& default_value() const;
 
-  option& set_implicit_value(const std::string& i)
-  {
-    has_implicit_ = true;
-    implicit_ = i;
-    return *this;
-  }
-  bool has_implicit_value() const { return has_implicit_; }
-  const std::string& implicit_value() const { return implicit_; }
+  option& set_implicit_value(const std::string& i);
+  bool has_implicit_value() const;
+  const std::string& implicit_value() const;
 
-  option& set_composing() { return set_narg(~0u); }
-  bool is_composing() const { return narg() == ~0u; }
+  option& set_composing();
+  bool is_composing() const;
 
-  option& set_narg(size_t n)
-  {
-    narg_ = n;
-    return *this;
-  }
-  size_t narg() const { return narg_; }
+  option& set_overwriting();
+  bool is_overwriting() const;
+
+  option& set_narg(size_t n);
+  size_t narg() const;
 
 private:
-  std::vector<std::string> keys_;
-  std::vector<std::string> shortkeys_;
-  std::string help_;
-  size_t narg_;
-  std::string default_;
-  bool has_default_;
-  std::string implicit_;
-  bool has_implicit_;
+  struct d;
+  std::unique_ptr<d> d_;
 };
 
 class value_set

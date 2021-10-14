@@ -149,7 +149,7 @@ MI_CPPTEST_TEST_CASE(progopt_consume_positional)
 
 MI_CPPTEST_TEST_CASE(progopt_end_of_options)
 {
-  const option o1 = option("one.setting", "this is a setting").set_composing();
+  const option o1 = std::move(option("one.setting", "this is a setting").set_composing());
   const option o2("one.option", "this is an option");
 
   option_set options;
@@ -188,4 +188,29 @@ MI_CPPTEST_TEST_CASE(progopt_multiple_shortkeys)
   string_v positional;
   const value_set values2 = parse_command_line(cmdline, options, positional);
   MI_CPPTEST_CHECK_EQ("hi", values2.value(&o2));
+}
+
+MI_CPPTEST_TEST_CASE(progopt_bad_duplicate)
+{
+  const option os = option("setup", "this is an option").add_shortkey("s");
+
+  option_set options;
+  options.add(os);
+
+  std::vector<std::string> cmdline {"test.exe", "--setup=ha", "-s", "he"};
+  string_v positional;
+  MI_CPPTEST_CHECK_THROW(parse_command_line(cmdline, options, positional), option_error);
+}
+
+MI_CPPTEST_TEST_CASE(progopt_overwriting)
+{
+  const option os = std::move(option("setup", "this is an option").add_shortkey("s").set_overwriting());
+
+  option_set options;
+  options.add(os);
+
+  std::vector<std::string> cmdline {"test.exe", "--setup=ha", "-s", "he"};
+  string_v positional;
+  const value_set values2 = parse_command_line(cmdline, options, positional);
+  MI_CPPTEST_CHECK_EQ("he", values2.value(&os));
 }
