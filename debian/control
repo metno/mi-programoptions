@@ -11,7 +11,7 @@ Section: libs
 Package: libmi-programoptions-dev
 Section: libdevel
 Architecture: any
-Depends: libmi-programoptions1 (= ${binary:Version}),
+Depends: libmi-programoptions2 (= ${binary:Version}),
  ${shlibs:Depends},
  ${misc:Depends}
 Description: MET Norway c++ program options library
@@ -19,7 +19,7 @@ Description: MET Norway c++ program options library
  .
  This package contains the development files.
 
-Package: libmi-programoptions1
+Package: libmi-programoptions2
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}
@@ -28,11 +28,11 @@ Description: MET Norway c++ program options library
  .
  This package contains the shared library.
 
-Package: libmi-programoptions1-dbg
+Package: libmi-programoptions2-dbg
 Section: debug
 Priority: extra
 Architecture: any
-Depends: libmi-programoptions1 (= ${binary:Version})
+Depends: libmi-programoptions2 (= ${binary:Version})
 Description: MET Norway c++ program options library
  A small program options library.
  .
