@@ -1,9 +1,9 @@
 Source: mi-programoptions
 Priority: optional
 Maintainer: MET Norway <diana@met.no>
-Build-Depends:  debhelper (>= 9),
+Build-Depends:  debhelper (>= 11),
  quilt,
- cmake,
+ cmake (>= 3.10),
  libmi-cpptest-dev
 Standards-Version: 3.9.6
 Section: libs
