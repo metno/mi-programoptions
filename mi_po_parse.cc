@@ -1,7 +1,7 @@
 /*
   mi-programoptions
 
-  Copyright (C) 2019-2021 met.no
+  Copyright (C) 2019-2026 met.no
 
   Contact information:
   Norwegian Meteorological Institute
@@ -30,6 +30,7 @@
 #include "mi_programoptions.h"
 
 #include <fstream>
+#include <sstream>
 
 namespace {
 const std::string EMPTY;

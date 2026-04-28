@@ -3,6 +3,8 @@
 
 #include "mi_programoptions.h"
 
+#include <sstream>
+
 using namespace miutil::program_options;
 
 MI_CPPTEST_TEST_CASE(progopt_config_file)
