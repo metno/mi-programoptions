@@ -1,7 +1,7 @@
 /*
   mi-programoptions
 
-  Copyright (C) 2019 met.no
+  Copyright (C) 2026 met.no
 
   Contact information:
   Norwegian Meteorological Institute
@@ -32,7 +32,7 @@
 
 #define MI_PROGRAMOPTIONS_VERSION_MAJOR 2
 #define MI_PROGRAMOPTIONS_VERSION_MINOR 0
-#define MI_PROGRAMOPTIONS_VERSION_PATCH 1
+#define MI_PROGRAMOPTIONS_VERSION_PATCH 2
 
 #define MI_PROGRAMOPTIONS_VERSION_INT(major,minor,patch) \
     (1000000*major + 1000*minor + patch)
