@@ -37,6 +37,13 @@ INCLUDE(CMakePackageConfigHelpers)
 INCLUDE(GNUInstallDirs)
 SET(CMAKE_CXX_STANDARD 11)
 
+# Enable all warnings
+IF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  ADD_COMPILE_OPTIONS(-Wall -Wextra -Wpedantic -Wconversion -Wformat -Wformat=2 -Wformat-security -Werror=format-security)
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  ADD_COMPILE_OPTIONS(/W4 /WX)
+ENDIF()
+
 SET(MI_PROGRAMOPTIONS_HEADERS
   mi_programoptions.h
   mi_programoptions_version.h

@@ -30,6 +30,8 @@
 #ifndef MI_PROGRAMOPTIONS_H
 #define MI_PROGRAMOPTIONS_H
 
+//#define USE_REGEX_FOR_PARSE_COMMAND_LINE
+
 #include <iosfwd>
 #include <map>
 #include <regex>

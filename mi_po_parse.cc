@@ -94,6 +94,8 @@ value_set parse_config_file(std::istream& infile, option_set& options)
   return values;
 }
 
+#ifdef USE_REGEX_FOR_PARSE_COMMAND_LINE
+
 value_set parse_command_line(const std::vector<std::string>& argv, option_set& options, std::vector<std::string>& positional)
 {
   value_set values;
@@ -141,6 +143,114 @@ value_set parse_command_line(const std::vector<std::string>& argv, option_set& o
   }
   return values;
 }
+
+#else
+
+value_set parse_command_line(const std::vector<std::string>& argv, option_set& options, std::vector<std::string>& positional)
+{
+  value_set values;
+  bool end_of_options_marker = false;
+  const std::size_t argc = argv.size();
+
+  constexpr std::size_t OPTION_PREFIX_SHORT_LENGTH = 1;   // Length of '-' prefix for short options
+  constexpr std::size_t OPTION_PREFIX_LONG_LENGTH = 2;    // Length of '--' prefix for long options
+  constexpr char OPTION_PREFIX_SHORT = '-';               // Short option prefix
+  constexpr const char* OPTION_PREFIX_LONG = "--";        // Long option prefix
+  constexpr char OPTION_DELIMITER = '=';                  // Delimiter between option and value (e.g., --key=value)
+
+  for (std::size_t a = 0; a < argc; ++a) {
+    const std::string& arg = argv.at(a);
+
+    // All arguments after '--' are positional
+    if (arg == "--") {
+      end_of_options_marker = true;
+      continue;
+    }
+
+    if (!end_of_options_marker) {
+      if (arg.rfind(OPTION_PREFIX_LONG, 0) == 0) {
+        std::string key;
+        std::string value;
+        std::size_t eq_pos = arg.find(OPTION_DELIMITER);
+
+        if (eq_pos != std::string::npos) {
+          // Option in the form of --key=value, take everything after the first '=' as the value
+          key = arg.substr(OPTION_PREFIX_LONG_LENGTH, eq_pos - OPTION_PREFIX_LONG_LENGTH);
+          value = arg.substr(eq_pos + 1); // Value includes everything after the first '='
+        } else {
+          // Option is just --key without value
+          key = arg.substr(OPTION_PREFIX_LONG_LENGTH);
+        }
+
+        option_cx opt = options.find_option(key, false);
+        if (opt->narg() == 0) {
+          values.put(opt, std::string()); // No argument expected
+          // } else if (!value.empty()) { //
+        } else if (eq_pos != std::string::npos) { // Value is allowed to be empty
+          values.put(opt, value);                 // value passed after "=" (even if empty)
+        } else if (opt->has_implicit_value()) {
+          values.put_implicit(opt); // implicit value
+        } else if (opt->is_composing() && (a + 1 < argc)) {
+          values.put(opt, argv.at(++a)); // composing argument, take next arg
+        } else if (!opt->is_composing() && (a + opt->narg() < argc)) {
+          // multiple arguments expected
+          string_v args;
+          args.reserve(opt->narg());
+          for (std::size_t i = 0; i < opt->narg(); ++i) {
+            args.push_back(argv.at(++a));
+          }
+          values.put(opt, args);
+        } else {
+          throw option_error("Missing argument for long option '" + opt->key() + "'");
+        }
+      }
+      // Handle short options (start with '-')
+      else if (arg.rfind(OPTION_PREFIX_SHORT, 0) == 0 && arg.length() > OPTION_PREFIX_SHORT_LENGTH) {
+        std::string key;
+        std::string value;
+        std::size_t eq_pos = arg.find(OPTION_DELIMITER);
+
+        if (eq_pos != std::string::npos) {
+          // Short option with value using "=": -option=value
+          key = arg.substr(OPTION_PREFIX_SHORT_LENGTH, eq_pos - OPTION_PREFIX_SHORT_LENGTH);
+          value = arg.substr(eq_pos + 1);
+        } else {
+          // Short option without "=": -option
+          key = arg.substr(OPTION_PREFIX_SHORT_LENGTH);
+        }
+
+        option_cx opt = options.find_option(key, true); // short option
+        if (opt->narg() == 0) {
+          values.put(opt, std::string()); // No argument expected
+          //} else if (!value.empty()) { //
+        } else if (eq_pos != std::string::npos) { // Value is allowed to be empty
+          values.put(opt, value);                 // value passed after "=" (even if empty)
+        } else if (a + opt->narg() < argc) {
+          // Collect multiple arguments for short option
+          string_v args;
+          args.reserve(opt->narg());
+          for (std::size_t i = 0; i < opt->narg(); ++i) {
+            args.push_back(argv.at(++a));
+          }
+          values.put(opt, args);
+        } else {
+          throw option_error("Missing argument for short option '" + opt->key() + "'");
+        }
+      }
+      // Handle positional arguments (non-option)
+      else {
+        positional.push_back(arg);
+      }
+    } else {
+      // All remaining arguments after "--" are positional
+      positional.push_back(arg);
+    }
+  }
+
+  return values;
+}
+
+#endif
 
 value_set parse_command_line(int argc, char* argv[], option_set& options, std::vector<std::string>& positional)
 {

@@ -216,3 +216,168 @@ MI_CPPTEST_TEST_CASE(progopt_overwriting)
   const value_set values2 = parse_command_line(cmdline, options, positional);
   MI_CPPTEST_CHECK_EQ("he", values2.value(&os));
 }
+
+MI_CPPTEST_TEST_CASE(progopt_empty_option_value)
+{
+  const option o1 = option("empty_option", "option with an empty value");
+
+  option_set options;
+  options.add(o1);
+
+  const char* argv[] = {"test.exe", "--empty_option="};
+  const int argc = sizeof(argv) / sizeof(argv[0]);
+
+  string_v positional;
+  const value_set values = parse_command_line(argc, const_cast<char**>(argv), options, positional);
+
+  // Verify that the value is captured as empty
+  MI_CPPTEST_CHECK_EQ("", values.value(&o1));
+}
+
+MI_CPPTEST_TEST_CASE(progopt_implicit_and_default_values_combined)
+{
+  const option o1 = option("setting", "option with default and implicit values").set_default_value("default").set_implicit_value("implicit");
+
+  option_set options;
+  options.add(o1);
+
+  const char* argv[] = {"test.exe", "--setting"};
+  const int argc = sizeof(argv) / sizeof(argv[0]);
+
+  string_v positional;
+  const value_set values = parse_command_line(argc, const_cast<char**>(argv), options, positional);
+
+  // Verify that the implicit value is used when no explicit value is provided
+  MI_CPPTEST_CHECK_EQ("implicit", values.value(&o1));
+}
+
+MI_CPPTEST_TEST_CASE(progopt_long_option_without_value_and_default)
+{
+  const option o1 = option("setting", "option with default").set_default_value("default");
+
+  option_set options;
+  options.add(o1);
+
+  const char* argv[] = {"test.exe"};
+  const int argc = sizeof(argv) / sizeof(argv[0]);
+
+  string_v positional;
+  const value_set values = parse_command_line(argc, const_cast<char**>(argv), options, positional);
+
+  // Verify that the default value is used when the option is not set
+  MI_CPPTEST_CHECK_EQ("default", values.value(&o1));
+}
+
+MI_CPPTEST_TEST_CASE(progopt_config_file_exception_throw)
+{
+  const option o1 = option("section1.setting", "this is a setting");
+  const option o2 = option("section1.nested_setting", "this is a nested setting").set_implicit_value("default_nested");
+  const option o3 = option("section2.option", "this is an option").set_implicit_value("default_option");
+  const option o4 = option("section2.spaces_option", "this is a option with spaces");
+  const option o5 = option("global.setting", "this is a global setting");
+
+  option_set options;
+  options.add(o1).add(o2).add(o3).add(o4).add(o5);
+
+  std::istringstream configfile("# Global section\n"
+                                "global.setting=global_value\n\n"
+                                "[section1]\n"
+                                "# A comment in section 1\n"
+                                "setting=value1\n"
+                                "nested_setting=\"a nested value with spaces\"\n"
+                                "\n"
+                                "[section2]\n"
+                                "option=value2\n"
+                                "spaces_option='a value with special chars!@#'\n"
+                                "# Another comment in section 2\n"
+                                "option=\n" // It should trigger an exception.
+                                "\n"
+                                "# Invalid or missing sections should be ignored");
+  MI_CPPTEST_CHECK_THROW(parse_config_file(configfile, options), option_error);
+}
+
+MI_CPPTEST_TEST_CASE(progopt_option_assignment_operator)
+{
+  option opt1 = option("setting1", "This is the first setting");
+  option opt2 = option("setting2", "This is the second setting");
+
+  opt2.set_default_value("default_value2").set_shortkey("s2").set_implicit_value("implicit_value2").set_composing();
+
+  opt1 = opt2;
+  MI_CPPTEST_CHECK_EQ("setting2", opt1.key());
+  MI_CPPTEST_CHECK_EQ("This is the second setting", opt1.help());
+  MI_CPPTEST_CHECK_EQ("default_value2", opt1.default_value());
+  MI_CPPTEST_CHECK_EQ("implicit_value2", opt1.implicit_value());
+  MI_CPPTEST_CHECK(opt1.is_composing());
+  MI_CPPTEST_CHECK_EQ("s2", opt1.shortkey());
+}
+
+MI_CPPTEST_TEST_CASE(progopt_option_set_non_existing_settings)
+{
+  const option opt1 = option("setting1", "This is setting1").add_shortkey("s1");
+  const option opt2 = option("setting2", "This is setting2");
+
+  option_set options;
+  options.add(opt1).add(opt2);
+
+  MI_CPPTEST_CHECK_THROW(options.find_option("non_existing_setting", false), option_error);
+  MI_CPPTEST_CHECK_THROW(options.find_option("non_existing_shortkey", true), option_error);
+}
+
+// #ifndef USE_REGEX_FOR_PARSE_COMMAND_LINE
+//  These tests will segfault when using the regex version
+MI_CPPTEST_TEST_CASE(progopt_long_options)
+{
+  const option o1 = option("one.setting", "this is a very long setting");
+  const option o2("one.option", "this is a very long option");
+
+  option_set options;
+  options.add(o1).add(o2);
+
+  // Create an extremely long string
+  std::string long_value(27000, 'x');
+  std::string long_option = "--one.setting=" + long_value;
+
+  const char* argv[] = {"test.exe", long_option.c_str()};
+  const int argc = sizeof(argv) / sizeof(argv[0]);
+
+  string_v positional;
+  const value_set values = parse_command_line(argc, const_cast<char**>(argv), options, positional);
+
+  MI_CPPTEST_CHECK(values.is_set(&o1));
+  MI_CPPTEST_CHECK_EQ(long_value, values.value(&o1));
+
+  MI_CPPTEST_CHECK_EQ(0, positional.size());
+}
+// These will segfault when using the regex version
+MI_CPPTEST_TEST_CASE(progopt_long_options_part2)
+{
+  const option o1 = option("one.setting", "this is a very long and complex setting");
+  const option o2("one.option", "this is a very long and complex option");
+
+  option_set options;
+  options.add(o1).add(o2);
+
+  std::string long_input = "value1, value2; value3, \"quoted value with spaces\"; 'single quoted', value with spaces and ; ; more,values";
+
+  std::string long_value;
+  for (int i = 0; i < 5000000; ++i) {
+    long_value += long_input + ",";
+  }
+  std::string long_option = "--one.setting=" + long_value;
+
+  const char* argv[] = {"test.exe", long_option.c_str()};
+  const int argc = sizeof(argv) / sizeof(argv[0]);
+
+  string_v positional;
+  const value_set values = parse_command_line(argc, const_cast<char**>(argv), options, positional);
+
+  // Verify that the long option was correctly parsed and stored
+  MI_CPPTEST_CHECK(values.is_set(&o1));
+  MI_CPPTEST_CHECK_EQ(long_value, values.value(&o1));
+
+  // Ensure there are no positional arguments
+  MI_CPPTEST_CHECK_EQ(0, positional.size());
+}
+
+// #endif
